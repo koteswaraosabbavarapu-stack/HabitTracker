@@ -6,9 +6,13 @@ const habitSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    completed: {
-      type: Boolean,
-      default: false
+    streak: {
+      type: Number,
+      default: 0
+    },
+    lastCompleted: {
+      type: Date,
+      default: null
     }
   },
   { timestamps: true }

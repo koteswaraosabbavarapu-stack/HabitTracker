@@ -12,7 +12,9 @@ router.get("/", async (req, res) => {
 // Add habit
 router.post("/", async (req, res) => {
   const habit = await Habit.create({
-    title: req.body.title
+    title: req.body.title,
+    streak: 0,
+    lastCompleted: null
   });
 
   res.json(habit);
@@ -20,13 +22,43 @@ router.post("/", async (req, res) => {
 
 // Complete habit
 router.put("/:id/complete", async (req, res) => {
-  const updated = await Habit.findByIdAndUpdate(
-    req.params.id,
-    { completed: true },
-    { new: true }
-  );
+  const habit = await Habit.findById(req.params.id);
 
-  res.json(updated);
+  if (!habit) {
+    return res.status(404).json({
+      message: "Habit not found"
+    });
+  }
+
+  const today = new Date();
+
+  const last = habit.lastCompleted
+    ? new Date(habit.lastCompleted)
+    : null;
+
+  if (last) {
+    const diffDays = Math.floor(
+      (today - last) / (1000 * 60 * 60 * 24)
+    );
+
+    if (diffDays === 0) {
+      return res.json(habit);
+    }
+
+    if (diffDays === 1) {
+      habit.streak += 1;
+    } else {
+      habit.streak = 1;
+    }
+  } else {
+    habit.streak = 1;
+  }
+
+  habit.lastCompleted = today;
+
+  await habit.save();
+
+  res.json(habit);
 });
 
 // Delete habit

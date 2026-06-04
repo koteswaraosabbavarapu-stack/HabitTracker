@@ -9,106 +9,154 @@ function App() {
   }, []);
 
   const fetchHabits = async () => {
-    const res = await fetch(
-      "http://localhost:5000/api/habits"
-    );
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/habits"
+      );
 
-    const data = await res.json();
+      const data = await res.json();
 
-    setHabits(data);
+      setHabits(data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const addHabit = async () => {
-    const res = await fetch(
-      "http://localhost:5000/api/habits",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ title })
-      }
-    );
+    if (!title.trim()) return;
 
-    const newHabit = await res.json();
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/habits",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ title }),
+        }
+      );
 
-    setHabits([...habits, newHabit]);
+      const newHabit = await res.json();
 
-    setTitle("");
+      setHabits([...habits, newHabit]);
+
+      setTitle("");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const completeHabit = async (id) => {
-    const res = await fetch(
-      `http://localhost:5000/api/habits/${id}/complete`,
-      {
-        method: "PUT"
-      }
-    );
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/habits/${id}/complete`,
+        {
+          method: "PUT",
+        }
+      );
 
-    const updated = await res.json();
+      const updatedHabit = await res.json();
 
-    setHabits(
-      habits.map(h =>
-        h._id === id ? updated : h
-      )
-    );
+      setHabits(
+        habits.map((habit) =>
+          habit._id === id
+            ? updatedHabit
+            : habit
+        )
+      );
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const deleteHabit = async (id) => {
-    await fetch(
-      `http://localhost:5000/api/habits/${id}`,
-      {
-        method: "DELETE"
-      }
-    );
+    try {
+      await fetch(
+        `http://localhost:5000/api/habits/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
 
-    setHabits(
-      habits.filter(h => h._id !== id)
-    );
+      setHabits(
+        habits.filter(
+          (habit) => habit._id !== id
+        )
+      );
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
-    <div>
+    <div style={{ padding: "20px" }}>
       <h1>Habit Tracker</h1>
 
-      <input
-        value={title}
-        onChange={(e) =>
-          setTitle(e.target.value)
-        }
-      />
+      <div>
+        <input
+          type="text"
+          placeholder="Enter habit..."
+          value={title}
+          onChange={(e) =>
+            setTitle(e.target.value)
+          }
+        />
 
-      <button onClick={addHabit}>
-        Add
-      </button>
+        <button onClick={addHabit}>
+          Add Habit
+        </button>
+      </div>
 
-      {habits.map(habit => (
-        <div key={habit._id}>
-          <span>
-            {habit.title}
-          </span>
+      <hr />
 
-          {habit.completed ? (
-            " ✅"
-          ) : (
+      {habits.length === 0 ? (
+        <p>No habits found.</p>
+      ) : (
+        habits.map((habit) => (
+          <div
+            key={habit._id}
+            style={{
+              border: "1px solid gray",
+              padding: "10px",
+              marginBottom: "10px",
+            }}
+          >
+            <h3>{habit.title}</h3>
+
+            <p>
+              🔥 Streak: {habit.streak}
+            </p>
+
+            <p>
+              Last Completed:
+              {" "}
+              {habit.lastCompleted
+                ? new Date(
+                    habit.lastCompleted
+                  ).toLocaleDateString()
+                : " Never"}
+            </p>
+
             <button
               onClick={() =>
                 completeHabit(habit._id)
               }
             >
-              Complete
+              Complete Today
             </button>
-          )}
 
-          <button
-            onClick={() =>
-              deleteHabit(habit._id)
-            }
-          >
-            Delete
-          </button>
-        </div>
-      ))}
+            <button
+              onClick={() =>
+                deleteHabit(habit._id)
+              }
+              style={{ marginLeft: "10px" }}
+            >
+              Delete
+            </button>
+          </div>
+        ))
+      )}
     </div>
   );
 }

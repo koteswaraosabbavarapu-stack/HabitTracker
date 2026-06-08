@@ -9,6 +9,20 @@ router.get("/", async (req, res) => {
   res.json(habits);
 });
 
+//Get statistics
+router.get("/stats",async (req,res)=>{
+  const totalHabits=await Habit.countDocuments();
+  const completedHabits=await Habit.countDocuments({streak:{$gt:0}});
+  let longestStreak=0;
+  const habits=await Habit.find();
+  for(let habit of habits){
+    if(habit.streak>longestStreak){
+      longestStreak=habit.streak;
+    }
+  }
+  res.json({totalHabits, completedHabits, longestStreak});
+});
+
 // Add habit
 router.post("/", async (req, res) => {
   const habit = await Habit.create({

@@ -5,12 +5,14 @@ const dotenv = require("dotenv");
 dotenv.config();
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
+const cookieParser = require('cookie-parser')
 
 
 connectDB();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser())
 app.use("/api/auth", authRoutes);
 
 app.use("/api/habits", require("./routes/habitRoutes"));

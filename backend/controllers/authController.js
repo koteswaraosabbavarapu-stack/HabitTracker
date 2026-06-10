@@ -3,12 +3,23 @@ dotenv.config() // load env vars before anything else
 const User = require('../models/User')
 const jwt = require('jsonwebtoken')
 
-// ─── Helper: generate JWT ─────────────────────────────────
-const generateToken = (userId, role) => {
+// ─── Helper: generate JWT 
+
+// ─── Generate Access Token (short lived) ─────────────────
+const generateAccessToken = (userId, role) => {
   return jwt.sign(
     { userId, role },
     process.env.JWT_SECRET,
     { expiresIn: '15m' }
+  )
+}
+
+// ─── Generate Refresh Token (long lived) ─────────────────
+const generateRefreshToken = (userId) => {
+  return jwt.sign(
+    { userId },
+    process.env.JWT_REFRESH_SECRET,    // different secret!
+    { expiresIn: '7d' }
   )
 }
 
@@ -34,11 +45,19 @@ const registerUser = async (req, res) => {
     const user = await User.create({ name, email, password })
 
     // 4. send back token immediately (user is logged in after register)
-    const token = generateToken(user._id, user.role)
+    const accessToken = generateAccessToken(user._id, user.role)
 
+    const refreshToken=generateRefreshToken(user._id)
+    
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: false, // only send over HTTPS in production
+      sameSite: 'Strict', // CSRF protection
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    })
     res.status(201).json({
       message: 'User registered successfully',
-      token,
+      accessToken,
       user: {
         id: user._id,
         name: user.name,
@@ -46,6 +65,7 @@ const registerUser = async (req, res) => {
         role: user.role
       }
     })
+
 
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message })
@@ -76,11 +96,18 @@ const loginUser = async (req, res) => {
     }
 
     // 4. generate token
-    const token = generateToken(user._id, user.role)
+    const accessToken = generateAccessToken(user._id, user.role)
+    const refreshToken = generateRefreshToken(user._id)
 
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: false, // only send over HTTPS in prod
+      sameSite: 'Strict', // CSRF protection
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    })
     res.status(200).json({
       message: 'Login successful',
-      token,
+      accessToken,
       user: {
         id: user._id,
         name: user.name,

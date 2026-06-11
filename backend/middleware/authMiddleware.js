@@ -32,4 +32,19 @@ const protect = async (req, res, next) => {
   }
 }
 
-module.exports = { protect }
+// ─── Role middleware ──────────────────────────────────────
+const allowedTo = (...roles) => {
+  return (req, res, next) => {
+
+    // check if logged in user's role is in allowed roles
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        message: `Access denied. ${req.user.role} is not allowed to do this`
+      })
+    }
+
+    next()
+  }
+}
+
+module.exports = { protect, allowedTo }

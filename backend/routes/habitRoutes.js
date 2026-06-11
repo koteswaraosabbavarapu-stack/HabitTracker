@@ -1,16 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const { protect } = require("../middleware/authMiddleware");
+const { protect,allowedTo } = require("../middleware/authMiddleware");
 const Habit = require("../models/Habit");
 
 // Get habits
-router.get("/", protect, async (req, res) => {
+router.get("/", protect,allowedTo('admin', 'user'), async (req, res) => {
   const habits = await Habit.find();
   res.json(habits);
 });
 
 //Get statistics
-router.get("/stats", protect, async (req, res) => {
+router.get("/stats", protect,allowedTo('admin', 'user'), async (req, res) => {
   const totalHabits = await Habit.countDocuments();
   const completedHabits = await Habit.countDocuments({ streak: { $gt: 0 } });
   let longestStreak = 0;
@@ -24,7 +24,7 @@ router.get("/stats", protect, async (req, res) => {
 });
 
 // Add habit
-router.post("/", protect, async (req, res) => {
+router.post("/", protect,allowedTo('admin', 'user'), async (req, res) => {
   const habit = await Habit.create({
     title: req.body.title,
     streak: 0,
@@ -35,7 +35,7 @@ router.post("/", protect, async (req, res) => {
 });
 
 // Complete habit
-router.put("/:id/complete", protect, async (req, res) => {
+router.put("/:id/complete", protect,allowedTo('admin', 'user'), async (req, res) => {
   const habit = await Habit.findById(req.params.id);
 
   if (!habit) {
@@ -76,7 +76,7 @@ router.put("/:id/complete", protect, async (req, res) => {
 });
 
 // Delete habit
-router.delete("/:id", protect, async (req, res) => {
+router.delete("/:id", protect,allowedTo('admin'), async (req, res) => {
   await Habit.findByIdAndDelete(req.params.id);
 
   res.json({

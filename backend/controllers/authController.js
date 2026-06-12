@@ -23,6 +23,35 @@ const generateRefreshToken = (userId) => {
   )
 }
 
+const refreshAccessToken = async (req, res) => {
+  try {
+    // browser sends cookie automatically
+    const token = req.cookies.refreshToken
+
+    if (!token) {
+      return res.status(401).json({ message: 'No refresh token' })
+    }
+
+    // verify refresh token
+    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET)
+
+    // find user
+    const user = await User.findById(decoded.userId)
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' })
+    }
+
+    // generate new access token
+    const newAccessToken = generateAccessToken(user._id, user.role)
+
+    res.json({ accessToken: newAccessToken })
+
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid refresh token' })
+  }
+}
+
+
 // ─── REGISTER ─────────────────────────────────────────────
 // POST /api/auth/register
 const registerUser = async (req, res) => {
@@ -122,4 +151,12 @@ const loginUser = async (req, res) => {
 }
 }
 
-module.exports = { registerUser, loginUser }
+const logoutUser = async (req, res) => {
+  res.cookie('refreshToken', '', {
+    httpOnly: true,
+    expires: new Date(0)    // expire cookie immediately
+  })
+  res.json({ message: 'Logged out' })
+}
+
+module.exports = { registerUser, loginUser,refreshAccessToken, logoutUser }

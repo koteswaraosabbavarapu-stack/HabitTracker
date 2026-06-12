@@ -5,16 +5,16 @@ const Habit = require("../models/Habit");
 
 // Get habits
 router.get("/", protect,allowedTo('admin', 'user'), async (req, res) => {
-  const habits = await Habit.find();
+  const habits = await Habit.find({ userId: req.user._id });
   res.json(habits);
 });
 
 //Get statistics
 router.get("/stats", protect,allowedTo('admin', 'user'), async (req, res) => {
-  const totalHabits = await Habit.countDocuments();
-  const completedHabits = await Habit.countDocuments({ streak: { $gt: 0 } });
+  const totalHabits = await Habit.countDocuments({ userId: req.user._id });
+  const completedHabits = await Habit.countDocuments({ userId: req.user._id, streak: { $gt: 0 } });
   let longestStreak = 0;
-  const habits = await Habit.find();
+  const habits = await Habit.find({ userId: req.user._id });
   for(let habit of habits){
     if(habit.streak>longestStreak){
       longestStreak=habit.streak;
@@ -26,6 +26,7 @@ router.get("/stats", protect,allowedTo('admin', 'user'), async (req, res) => {
 // Add habit
 router.post("/", protect,allowedTo('admin', 'user'), async (req, res) => {
   const habit = await Habit.create({
+    userId: req.user._id,
     title: req.body.title,
     streak: 0,
     lastCompleted: null
@@ -36,7 +37,7 @@ router.post("/", protect,allowedTo('admin', 'user'), async (req, res) => {
 
 // Complete habit
 router.put("/:id/complete", protect,allowedTo('admin', 'user'), async (req, res) => {
-  const habit = await Habit.findById(req.params.id);
+  const habit = await Habit.findOne({ _id: req.params.id, userId: req.user._id });
 
   if (!habit) {
     return res.status(404).json({
@@ -77,7 +78,7 @@ router.put("/:id/complete", protect,allowedTo('admin', 'user'), async (req, res)
 
 // Delete habit
 router.delete("/:id", protect,allowedTo('admin'), async (req, res) => {
-  await Habit.findByIdAndDelete(req.params.id);
+  await Habit.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
 
   res.json({
     message: "Deleted"

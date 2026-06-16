@@ -12,27 +12,21 @@ const Habits = () => {
     longestStreak: 0,
   })
 
-  const { accessToken, user } = useAuth()
+  const { user } = useAuth()          // ← no more accessToken needed here
   const navigate = useNavigate()
 
-  // auth headers — attach token to every request
-  const authHeaders = {
-    headers: { Authorization: `Bearer ${accessToken}` }
-  }
-
   useEffect(() => {
-    // if not logged in → redirect to login
-    if (!accessToken) {
+    if (!user) {
       navigate('/login')
       return
     }
     fetchHabits()
     fetchStats()
-  }, [accessToken])
+  }, [user])
 
   const fetchHabits = async () => {
     try {
-      const res = await api.get('/habits', authHeaders)
+      const res = await api.get('/habits')     // ← no authHeaders!
       setHabits(res.data)
     } catch (err) {
       console.error('fetch habits error:', err)
@@ -41,7 +35,7 @@ const Habits = () => {
 
   const fetchStats = async () => {
     try {
-      const res = await api.get('/habits/stats', authHeaders)
+      const res = await api.get('/habits/stats')
       setStats(res.data)
     } catch (err) {
       console.error('fetch stats error:', err)
@@ -51,7 +45,7 @@ const Habits = () => {
   const addHabit = async () => {
     if (!title.trim()) return
     try {
-      const res = await api.post('/habits', { title }, authHeaders)
+      const res = await api.post('/habits', { title })
       setHabits([...habits, res.data])
       setTitle("")
       fetchStats()
@@ -62,7 +56,7 @@ const Habits = () => {
 
   const completeHabit = async (id) => {
     try {
-      const res = await api.put(`/habits/${id}/complete`, {}, authHeaders)
+      const res = await api.put(`/habits/${id}/complete`, {})
       setHabits(habits.map((habit) => habit._id === id ? res.data : habit))
       fetchStats()
     } catch (err) {
@@ -72,7 +66,7 @@ const Habits = () => {
 
   const deleteHabit = async (id) => {
     try {
-      await api.delete(`/habits/${id}`, authHeaders)
+      await api.delete(`/habits/${id}`)
       setHabits(habits.filter((habit) => habit._id !== id))
       fetchStats()
     } catch (err) {
@@ -84,8 +78,8 @@ const Habits = () => {
     <div style={{ padding: "20px" }}>
       <h1>Habit Tracker</h1>
       <p>Welcome, {user?.name}!</p>
+      <button onClick={logout}>Logout</button>
 
-      {/* Stats */}
       <h2>Statistics</h2>
       <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
         <div><h3>{stats.totalHabits}</h3><p>Total Habits</p></div>
@@ -93,7 +87,6 @@ const Habits = () => {
         <div><h3>{stats.longestStreak}</h3><p>Longest Streak</p></div>
       </div>
 
-      {/* Add Habit */}
       <input
         type="text"
         value={title}
@@ -104,7 +97,6 @@ const Habits = () => {
 
       <hr />
 
-      {/* Habit List */}
       {habits.map((habit) => (
         <div key={habit._id} style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}>
           <h3>{habit.title}</h3>

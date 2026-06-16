@@ -43,6 +43,17 @@ const refreshAccessToken = async (req, res) => {
 
     // generate new access token
     const newAccessToken = generateAccessToken(user._id, user.role)
+    const newRefreshToken = generateRefreshToken(user._id)
+    
+    user.refreshToken = newRefreshToken
+    await user.save()
+    // update refresh token in cookie
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: false, // only send over HTTPS in production
+      sameSite: 'Strict', // CSRF protection
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    })
 
     res.json({ accessToken: newAccessToken })
 
@@ -77,6 +88,9 @@ const registerUser = async (req, res) => {
     const accessToken = generateAccessToken(user._id, user.role)
 
     const refreshToken=generateRefreshToken(user._id)
+    // Save refresh token in user document
+    user.refreshToken = refreshToken
+    await user.save()
     
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -127,6 +141,10 @@ const loginUser = async (req, res) => {
     // 4. generate token
     const accessToken = generateAccessToken(user._id, user.role)
     const refreshToken = generateRefreshToken(user._id)
+    
+    // ─── save refresh token to DB ───────────────────────
+    user.refreshToken = refreshToken
+    await user.save()
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -152,11 +170,25 @@ const loginUser = async (req, res) => {
 }
 
 const logoutUser = async (req, res) => {
-  res.cookie('refreshToken', '', {
-    httpOnly: true,
-    expires: new Date(0)    // expire cookie immediately
-  })
-  res.json({ message: 'Logged out' })
+  try {
+    const token = req.cookies.refreshToken
+
+    // Find the user by the refresh token
+    const user = await User.findOne({ refreshToken: token })
+    if (user) {
+      user.refreshToken = null
+      await user.save()
+    }
+  
+
+    res.cookie('refreshToken', '', {
+      httpOnly: true,
+      expires: new Date(0)    // expire cookie immediately
+    })
+    res.json({ message: 'Logged out successfully' })
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
 }
 
-module.exports = { registerUser, loginUser,refreshAccessToken, logoutUser }
+module.exports = { registerUser, loginUser, refreshAccessToken, logoutUser }

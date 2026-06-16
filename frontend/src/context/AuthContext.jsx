@@ -9,27 +9,32 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const silentRefresh = async () => {
-      try {
-        const res = await api.post('/auth/refresh')
+  const silentRefresh = async () => {
+    try {
+      console.log('trying silent refresh...')
+      const res = await api.post('/auth/refresh')
+      console.log('refresh response:', res.data)
 
-        setToken(res.data.accessToken)    // ← store in tokenManager
+      setToken(res.data.accessToken)
 
-        const userRes = await api.get('/auth/me', {
-          headers: { Authorization: `Bearer ${res.data.accessToken}` }
-        })
-        setUser(userRes.data.user)
+      const userRes = await api.get('/auth/me', {
+        headers: { Authorization: `Bearer ${res.data.accessToken}` }
+      })
+      console.log('user response:', userRes.data)
+      setUser(userRes.data.user)
 
-      } catch (err) {
-        clearToken()
-        setUser(null)
-      } finally {
-        setLoading(false)
-      }
+    } catch (err) {
+      console.log('silent refresh failed:', err.message)  // ← what error?
+      clearToken()
+      setUser(null)
+    } finally {
+      console.log('setting loading false')
+      setLoading(false)   // ← this MUST run no matter what
     }
+  }
 
-    silentRefresh()
-  }, [])
+  silentRefresh()
+}, [])
 
   const register = async (name, email, password) => {
     const res = await api.post('/auth/register', { name, email, password })

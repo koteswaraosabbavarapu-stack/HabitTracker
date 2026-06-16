@@ -12,17 +12,13 @@ const Habits = () => {
     longestStreak: 0,
   })
 
-  const { user } = useAuth()          // ← no more accessToken needed here
+  const { user,logout} = useAuth()          // ← no more accessToken needed here
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login')
-      return
-    }
     fetchHabits()
     fetchStats()
-  }, [user])
+  }, [])
 
   const fetchHabits = async () => {
     try {
@@ -94,6 +90,7 @@ const Habits = () => {
         onChange={(e) => setTitle(e.target.value)}
       />
       <button onClick={addHabit}>Add Habit</button>
+      <button onClick={logout}>Logout</button>
 
       <hr />
 
@@ -105,6 +102,7 @@ const Habits = () => {
           <button onClick={() => completeHabit(habit._id)}>Complete Today</button>
           <button onClick={() => deleteHabit(habit._id)} style={{ marginLeft: "10px" }}>Delete</button>
         </div>
+        
       ))}
     </div>
   )

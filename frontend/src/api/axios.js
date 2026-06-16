@@ -6,7 +6,7 @@ const api = axios.create({
   withCredentials: true,    // sends refreshToken cookie automatically
 })
 
-// ─── Request Interceptor ──────────────────────────────────
+// ── Request Interceptor ──────────────────────────────────
 api.interceptors.request.use(
   (config) => {
     const token = getToken()    // get token from memory
@@ -15,7 +15,7 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
 
-    return config    // must return config!
+    return config   // must return config!
   },
   (error) => Promise.reject(error)
 )
@@ -26,6 +26,13 @@ api.interceptors.response.use(
 
   async (error) => {
     const originalRequest = error.config
+
+     // ✅ add this check — skip if it's the refresh endpoint itself
+    if (originalRequest.url === '/auth/refresh') {
+      clearToken()
+      setLoading(false)
+      return Promise.reject(error)
+    }
 
     // if 401 (token expired) and haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {

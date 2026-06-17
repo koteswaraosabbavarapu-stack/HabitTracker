@@ -3,10 +3,20 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const cookieParser = require('cookie-parser')
 dotenv.config();
+const session = require('express-session')
+const passport = require('./config/passport')
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 
 
+app.use(session({
+  secret: process.env.JWT_SECRET,
+  resave: false,
+  saveUninitialized: false
+}))
+
+app.use(passport.initialize())
+app.use(passport.session())
 
 connectDB();
 const app = express();

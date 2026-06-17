@@ -4,6 +4,8 @@ import Register from './pages/Register'
 import Habits from './pages/Habits'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
+import GoogleSuccess from './pages/GoogleSuccess'
+
 
 const App = () => {
   return (
@@ -32,7 +34,7 @@ const App = () => {
             <Habits />
           </ProtectedRoute>
         } />
-
+        <Route path="/google/success" element={<GoogleSuccess />} />
       </Routes>
     </BrowserRouter>
   )

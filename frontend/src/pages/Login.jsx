@@ -20,6 +20,11 @@ const Login = () => {
     }
   }
 
+  const handleGoogleLogin = () => {
+  // redirects to backend which redirects to Google
+  window.location.href = 'http://localhost:5000/api/auth/google'
+}
+
   return (
     <div>
       <h2>Login</h2>
@@ -38,6 +43,10 @@ const Login = () => {
           onChange={(e) => setPassword(e.target.value)}
         />
         <button type="submit">Login</button>
+
+        <button onClick={handleGoogleLogin}>
+          Login with Google
+        </button>
       </form>
     </div>
   )

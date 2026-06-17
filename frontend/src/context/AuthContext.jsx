@@ -36,6 +36,11 @@ export const AuthProvider = ({ children }) => {
   silentRefresh()
 }, [])
 
+  const setUserManually = (userData) => {
+  setUser(userData)
+  }
+
+ 
   const register = async (name, email, password) => {
     const res = await api.post('/auth/register', { name, email, password })
     setToken(res.data.accessToken)    // ← store in tokenManager
@@ -59,7 +64,7 @@ export const AuthProvider = ({ children }) => {
   if (loading) return <div>Loading...</div>
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout,setUserManually }}>
       {children}
     </AuthContext.Provider>
   )

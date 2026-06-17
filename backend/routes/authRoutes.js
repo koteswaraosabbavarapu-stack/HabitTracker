@@ -1,11 +1,29 @@
 const express = require('express')
 const router = express.Router()
-const { registerUser, loginUser,refreshAccessToken,logoutUser} = require('../controllers/authController')
+const passport = require('../config/passport')
+const { registerUser, loginUser,refreshAccessToken,logoutUser,googleAuthCallback} = require('../controllers/authController')
 const { protect,allowedTo } = require('../middleware/authMiddleware')
 
 router.post('/register', registerUser)
 
 router.post('/login', loginUser)
+
+
+// ─── Google OAuth routes ──────────────────────────────────
+
+// Step 1 — redirect to Google
+router.get('/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email']   // what we want from Google
+  })
+)
+
+// Step 2 — Google redirects back here
+router.get('/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  googleAuthCallback
+)
+
 
 router.post('/logout', logoutUser)
 

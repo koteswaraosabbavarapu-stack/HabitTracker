@@ -65,6 +65,33 @@ const refreshAccessToken = async (req, res) => {
 }
 
 
+const googleAuthCallback = async (req, res) => {
+  try {
+    // req.user is set by passport after Google login
+    const user = req.user
+
+    const accessToken = generateAccessToken(user._id, user.role)
+    const refreshToken = generateRefreshToken(user._id)
+
+    // save refresh token to DB
+    user.refreshToken = refreshToken
+    await user.save()
+
+    // set cookie
+    res.cookie('refreshToken', refreshToken, getCookieOptions())
+
+    // redirect to frontend with accessToken in URL
+    // frontend reads it and stores in memory
+    res.redirect(
+      `http://localhost:5173/auth/google/success?token=${accessToken}&name=${user.name}&email=${user.email}&role=${user.role}&id=${user._id}`
+    )
+
+  } catch (error) {
+    res.redirect('http://localhost:5173/login?error=google_auth_failed')
+  }
+}
+
+
 // ─── REGISTER ─────────────────────────────────────────────
 // POST /api/auth/register
 const registerUser = async (req, res) => {
@@ -184,4 +211,10 @@ const logoutUser = async (req, res) => {
   }
 }
 
-module.exports = { registerUser, loginUser, refreshAccessToken, logoutUser }
+module.exports = {
+  registerUser,
+  loginUser,
+  refreshAccessToken,
+  logoutUser,
+  googleAuthCallback
+}

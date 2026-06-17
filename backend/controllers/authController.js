@@ -22,6 +22,13 @@ const generateRefreshToken = (userId) => {
     { expiresIn: '7d' }
   )
 }
+const cookieOptions =() => ({
+  
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // only send over HTTPS in production
+    sameSite: process.env.NODE_ENV === 'production' ? 'Strict' : 'Lax', // CSRF protection
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+})
 
 const refreshAccessToken = async (req, res) => {
   try {
@@ -48,12 +55,7 @@ const refreshAccessToken = async (req, res) => {
     user.refreshToken = newRefreshToken
     await user.save()
     // update refresh token in cookie
-    res.cookie('refreshToken', newRefreshToken, {
-      httpOnly: true,
-      secure: false, // only send over HTTPS in production
-      sameSite: 'Strict', // CSRF protection
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    })
+    res.cookie('refreshToken', newRefreshToken, cookieOptions())
 
     res.json({ accessToken: newAccessToken })
 
@@ -92,12 +94,8 @@ const registerUser = async (req, res) => {
     user.refreshToken = refreshToken
     await user.save()
     
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: false, // only send over HTTPS in production
-      sameSite: 'Strict', // CSRF protection
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    })
+    res.cookie('refreshToken', refreshToken, cookieOptions())
+    
     res.status(201).json({
       message: 'User registered successfully',
       accessToken,
@@ -146,12 +144,7 @@ const loginUser = async (req, res) => {
     user.refreshToken = refreshToken
     await user.save()
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: false, // only send over HTTPS in prod
-      sameSite: 'Strict', // CSRF protection
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    })
+    res.cookie('refreshToken', refreshToken, cookieOptions())
     res.status(200).json({
       message: 'Login successful',
       accessToken,

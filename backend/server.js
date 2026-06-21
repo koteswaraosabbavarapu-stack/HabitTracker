@@ -8,7 +8,7 @@ const passport = require('./config/passport')
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 
-
+const app = express();
 app.use(session({
   secret: process.env.JWT_SECRET,
   resave: false,
@@ -19,7 +19,7 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 connectDB();
-const app = express();
+
 app.use(cors({
   origin: 'http://localhost:5173',   // ✅ exact frontend URL
   credentials: true                  // ✅ allows cookies

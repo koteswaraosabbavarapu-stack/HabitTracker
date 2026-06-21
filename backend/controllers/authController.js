@@ -156,7 +156,13 @@ const loginUser = async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' })
     }
-
+    
+     // ─── NEW: check if Google-only account ───────────────
+    if (!user.password) {
+      return res.status(401).json({
+        message: 'This account uses Google login. Please sign in with Google.'
+      })
+    }
     // 3. check password using matchPassword method we made in topic 3
     const isMatch = await user.matchPassword(password)
     if (!isMatch) {

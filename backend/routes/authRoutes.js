@@ -3,7 +3,17 @@ const router = express.Router()
 const passport = require('../config/passport')
 const { registerUser, loginUser,refreshAccessToken,logoutUser,googleAuthCallback} = require('../controllers/authController')
 const { protect,allowedTo } = require('../middleware/authMiddleware')
+const { sendWelcomeEmail } = require('../utils/sendEmails')
 
+// temporary test route
+router.get('/test-email', async (req, res) => {
+  try {
+    await sendWelcomeEmail('koteswaraosabbavarapu@gmail.com', 'Kotesh')
+    res.json({ message: 'Email sent! Check your inbox' })
+  } catch (error) {
+    res.status(500).json({ message: 'Email failed', error: error.message })
+  }
+})
 router.post('/register', registerUser)
 
 router.post('/login', loginUser)

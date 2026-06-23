@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 const { protect,allowedTo } = require("../middleware/authMiddleware");
 const Habit = require("../models/Habit");
-
+const { sendStreakMilestoneEmail } = require("../utils/sendEmails");
+const User = require("../models/User");
 // Get habits
 router.get("/", protect,allowedTo('admin', 'user'), async (req, res) => {
   const habits = await Habit.find({ userId: req.user._id });
@@ -72,6 +73,13 @@ router.put("/:id/complete", protect,allowedTo('admin', 'user'), async (req, res)
   habit.lastCompleted = today;
 
   await habit.save();
+
+  // ─── send streak milestone email ─────────────────────────
+   const milestones = [7, 30, 100]
+  if (milestones.includes(habit.streak)) {
+    const user = await User.findById(req.user._id)
+    await sendStreakMilestoneEmail(user.email, user.name, habit.streak)
+  }
 
   res.json(habit);
 });

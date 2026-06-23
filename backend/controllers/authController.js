@@ -2,7 +2,7 @@ const dotenv = require('dotenv')
 dotenv.config() // load env vars before anything else
 const User = require('../models/User')
 const jwt = require('jsonwebtoken')
-
+const { sendWelcomeEmail } = require('../utils/sendEmails')
 // ─── Helper: generate JWT 
 
 // ─── Generate Access Token (short lived) ─────────────────
@@ -112,6 +112,11 @@ const registerUser = async (req, res) => {
 
     // 3. create user (pre-save hook hashes password automatically)
     const user = await User.create({ name, email, password })
+
+    // ─── send welcome email ───────────────────────────────
+    await sendWelcomeEmail(email, name)
+    // if email fails — registration still succeeds
+    // because we don't throw inside sendWelcomeEmail
 
     // 4. send back token immediately (user is logged in after register)
     const accessToken = generateAccessToken(user._id, user.role)

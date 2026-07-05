@@ -3,6 +3,7 @@ dotenv.config() // load env vars before anything else
 const User = require('../models/User')
 const jwt = require('jsonwebtoken')
 const { sendWelcomeEmail } = require('../utils/sendEmails')
+
 // ─── Helper: generate JWT 
 
 // ─── Generate Access Token (short lived) ─────────────────
@@ -68,7 +69,15 @@ const refreshAccessToken = async (req, res) => {
 const googleAuthCallback = async (req, res) => {
   try {
     // req.user is set by passport after Google login
+      console.log('Google callback hit!')
+    console.log('req.user:', req.user)    // ← what does passport give us?
+
     const user = req.user
+
+    if (!user) {
+      console.log('No user from passport!')
+      return res.redirect('http://localhost:5173/login?error=no_user')
+    }
 
     const accessToken = generateAccessToken(user._id, user.role)
     const refreshToken = generateRefreshToken(user._id)
@@ -78,7 +87,7 @@ const googleAuthCallback = async (req, res) => {
     await user.save()
 
     // set cookie
-    res.cookie('refreshToken', refreshToken, getCookieOptions())
+    res.cookie('refreshToken', refreshToken, cookieOptions())
 
     // redirect to frontend with accessToken in URL
     // frontend reads it and stores in memory
@@ -87,6 +96,8 @@ const googleAuthCallback = async (req, res) => {
     )
 
   } catch (error) {
+    console.error('Google callback FULL error:', error.message)
+    console.error('Stack:', error.stack)
     res.redirect('http://localhost:5173/login?error=google_auth_failed')
   }
 }
@@ -98,7 +109,7 @@ const registerUser = async (req, res) => {
   console.log(req.body)
   try {
     const { name, email, password } = req.body
-
+    
     // 1. validate input
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'All fields are required' })

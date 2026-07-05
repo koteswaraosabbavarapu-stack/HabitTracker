@@ -1,7 +1,12 @@
 const passport = require('passport')
+const dotenv = require('dotenv')
+dotenv.config()
 const GoogleStrategy = require('passport-google-oauth20').Strategy
 const User = require('../models/User')
 
+// console.log('CLIENT ID:', process.env.GOOGLE_CLIENT_ID)
+// console.log('SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'loaded' : 'missing')
+// console.log('CALLBACK:', process.env.GOOGLE_CALLBACK_URL)
 passport.use(
   new GoogleStrategy(
     {

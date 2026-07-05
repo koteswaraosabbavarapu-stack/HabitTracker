@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getToken } from './tokenManager'
+import { getToken,setToken,clearToken } from './tokenManager'
 
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
@@ -30,7 +30,7 @@ api.interceptors.response.use(
      // ✅ add this check — skip if it's the refresh endpoint itself
     if (originalRequest.url === '/auth/refresh') {
       clearToken()
-      setLoading(false)
+      
       return Promise.reject(error)
     }
 

@@ -15,7 +15,7 @@ const generalLimiter = rateLimit({
 // ─── Strict limiter — auth routes ─────────────────────────
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,    // 15 minutes window
-  max: 10,                      // only 10 login attempts per IP
+  max: 100,                    // only 10 login attempts per IP
   message: {
     message: 'Too many login attempts, try again after 15 minutes'
   },

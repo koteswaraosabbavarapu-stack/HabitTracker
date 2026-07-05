@@ -4,6 +4,7 @@ const passport = require('../config/passport')
 const { registerUser, loginUser,refreshAccessToken,logoutUser,googleAuthCallback} = require('../controllers/authController')
 const { protect,allowedTo } = require('../middleware/authMiddleware')
 const { sendWelcomeEmail } = require('../utils/sendEmails')
+const { body, validationResult } = require('express-validator')
 
 // temporary test route
 router.get('/test-email', async (req, res) => {
@@ -14,7 +15,11 @@ router.get('/test-email', async (req, res) => {
     res.status(500).json({ message: 'Email failed', error: error.message })
   }
 })
-router.post('/register', registerUser)
+router.post('/register', [
+  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+  body('password').isLength({ min: 6 }).withMessage('Password min 6 chars')
+], registerUser)
 
 router.post('/login', loginUser)
 
@@ -22,11 +27,16 @@ router.post('/login', loginUser)
 // ─── Google OAuth routes ──────────────────────────────────
 
 // Step 1 — redirect to Google
-router.get('/google',
-  passport.authenticate('google', {
-    scope: ['profile', 'email']   // what we want from Google
-  })
-)
+router.get('/google', (req, res, next) => {
+  try {
+    passport.authenticate('google', {
+      scope: ['profile', 'email']
+    })(req, res, next)
+  } catch (err) {
+    console.error('Google auth error:', err)
+    res.status(500).json({ message: err.message })
+  }
+})
 
 // Step 2 — Google redirects back here
 router.get('/google/callback',

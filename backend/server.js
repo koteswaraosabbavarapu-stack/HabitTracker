@@ -74,8 +74,8 @@ app.use('/api/habits', habitRoutes)
 
 // ─── 7. Global error handler ──────────────────────────────
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL 
+  origin: process.env.NODE_ENV === 'production'
+    ? 'https://habit-tracker-nine-beryl-21.vercel.app'
     : 'http://localhost:5173',
   credentials: true
 }))

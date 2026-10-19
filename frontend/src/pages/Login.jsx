@@ -29,9 +29,8 @@ const Login = () => {
 
   // ─── Google Login ─────────────────────────────────────
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:5000/api/auth/google'
-  }
-
+  window.location.href = `${import.meta.env.VITE_API_URL?.replace('/api', '')}/api/auth/google`
+}
   return (
     <div style={styles.container}>
       <div style={styles.card}>
